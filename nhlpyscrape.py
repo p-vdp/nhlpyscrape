@@ -17,9 +17,32 @@ from scipy.stats import linregress
 from statistics import mean, median
 
 
-def scrape(start_year, end_year, filepath='', season_type='02', start_game=1, wait_time=0.5):
+def scrape_game(game_id):
+    """Query the NHL API for a given game ID and return a JSON object."""
+    # Set up API request
+    url = 'https://statsapi.web.nhl.com/api/v1/game/' + str(game_id) + \
+          '/feed/live'
+
+    # Make API request and load result into JSON object
+    # Thanks to https://github.com/robhowley/nhlscrapi for headers
+    req = requests.get(url, headers={
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11\
+            (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;\
+            q=0.9,*/*;q=0.8',
+        'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
+        'Accept-Encoding': 'none',
+        'Accept-Language': 'en-US,en;q=0.8',
+        'Connection': 'keep-alive'})
+
+    result = json.loads(req.text)
+
+    return result
+
+
+def scrape_season(start_year, end_year, filepath='', season_type='02', start_game=1, wait_time=0.5):
     """
-    Scrape NHL API and create a JSON file for each game ID.
+    Sequentially scrape 'feed/live' by season; create a file for each game.
 
     start_year = First season to scrape, e.g. 2016 for 2016-2017
     end_year = Last season to scrape, e.g. 2017 for 2017-2018
@@ -41,23 +64,8 @@ def scrape(start_year, end_year, filepath='', season_type='02', start_game=1, wa
         print('Processing:', game_id)
         filename = filepath + str(game_id) + '.json'
 
-        # Set up API request
-        url = 'https://statsapi.web.nhl.com/api/v1/game/' + str(game_id) + \
-              '/feed/live'
-
-        # Make API request and load result into JSON object
-        # Thanks to https://github.com/robhowley/nhlscrapi for headers
-        req = requests.get(url, headers={
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11\
-                (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;\
-                q=0.9,*/*;q=0.8',
-            'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
-            'Accept-Encoding': 'none',
-            'Accept-Language': 'en-US,en;q=0.8',
-            'Connection': 'keep-alive'})
-
-        result = json.loads(req.text)
+        # Scrape game
+        scrape_game(game_id)
 
         # Write valid result to file, or else increment to next season
         try:
