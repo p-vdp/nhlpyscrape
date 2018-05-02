@@ -1,18 +1,17 @@
+"""Development test suite."""
+
 import nhlpyscrape
+import json
 import sys
 
-folderpath = sys.argv[1]
+try:
+    folderpath = sys.argv[1]
+except IndexError:
+    sys.exit('Error: Provide data destination folder as argument, e.g.\n'
+             + 'python3 tests.py /file/path/')
 
-nhlpyscrape.scrape(2017, 2017, 'folderpath', '02', 1268)
+print(json.dumps(nhlpyscrape.scrape_game(2017020001), indent=2))
+print('OK')
 
-# team_query = ['TBL']    # team(s) to analyze (three letter abbrev)
-# team_query = []     # leave empty to analyze all available teams
-
-team_data, axis_days_off, \
-    axis_points, axis_last_10 = nhlpyscrape.analysis_restdays(['SJS'])
-
-subplt1 = nhlpyscrape.points_regression(axis_days_off, axis_points, team_data,
-                            'Days Since Previous Game', 'Points',
-                            upperbound_x=6.0)
-subplt2 = nhlpyscrape.points_regression(axis_last_10, axis_points, team_data,
-                            'Games in Previous 10 Days', 'Points')
+nhlpyscrape.scrape_season_to_file(2017, 2017, folderpath, '02', 1270, 0.2)
+print('OK')
