@@ -31,12 +31,26 @@ def json_to_file(obj, filepath):
         sys.exit('Error on permissions of', filepath)
 
 
+def string_to_file(obj, filepath):
+    """Write string object to file."""
+    try:
+        with open(filepath, 'w') as f:
+            f.write(obj)
+            f.close()
+    except FileNotFoundError:
+        sys.exit('Error: Could not find ' + filepath)
+    except FileNotFoundError:
+        sys.exit('Error opening', filepath)
+    except PermissionError:
+        sys.exit('Error on permissions of', filepath)
+
+
 def file_to_json(filepath):
     """Read file into JSON object."""
     try:
         with open(filepath, 'r') as f:
             result = json.load(f)
-            fname.close()
+            f.close()
             return result
     except FileNotFoundError:
         sys.exit('Error: Could not find ' + filepath)
@@ -126,16 +140,19 @@ def scrape_season_to_file(start_year, end_year, filepath='', season_type='02',
         result = scrape_game(game_id)
 
         # Write valid result to file, or else increment to next season
-        if result['gamePk'] == game_id:
+        try:
+            result['gamePk'] == game_id
             json_to_file(result, filename)
             current_game += 1
-            print('Processed game ID:', game_id)
+            print('Scraped game ID:', game_id, end='\r', flush=True)
             time.sleep(wait_time)                   # Wait before next API call
-        elif current_year < end_year:
-            current_year += 1
-            current_game = 1
-        else:
-            run_status = False
+        except KeyError:
+            if current_year < end_year:
+                current_year += 1
+                current_game = 1
+            else:
+                run_status = False
+                print('\n')
 
 
 def game_id(obj):
@@ -183,7 +200,7 @@ def home_shots(obj):
     return obj['liveData']['linescore']['teams']['home']['shotsOnGoal']
 
 
-def home_shots(obj):
+def periods(obj):
     """Return number of periods from NHL API's JSON (feed/live type)."""
     return obj['liveData']['linescore']['currentPeriod']
 
